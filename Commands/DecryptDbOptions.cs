@@ -1,4 +1,5 @@
 using CommandLine;
+using UmaDecryptor.Core;
 
 namespace UmaDecryptor.Commands;
 
@@ -13,6 +14,9 @@ public class DecryptDbOptions
 
     [Option('k', "key", HelpText = "自定义解密密钥 (十六进制格式，可选 - 如未提供则使用默认密钥)")]
     public string? CustomKey { get; set; }
+
+    [Option('r', "region", Default = Region.Japan, HelpText = "服务器区域 (Japan=0, Global=1, 默认: Japan)")]
+    public Region Region { get; set; } = Region.Japan;
 
     [Option('c', "cipher", Default = 3, HelpText = "加密索引 (默认: 3)")]
     public int CipherIndex { get; set; } = 3;

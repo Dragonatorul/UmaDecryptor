@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
 using System.Data.SQLite;
 using Microsoft.Data.Sqlite;
+using UmaDecryptor.Core;
 
 namespace UmaDecryptor.Database;
 
@@ -30,12 +31,13 @@ public class DatabaseDecryptor
     /// <summary>
     /// 解密所有数据库文件
     /// </summary>
-    public async Task DecryptDatabasesAsync(string inputPath, string outputPath)
+    public async Task DecryptDatabasesAsync(string inputPath, string outputPath, Region region = Region.Japan)
     {
         _logger.LogInformation("Starting database decryption process...");
+        _logger.LogInformation("Region: {Region}", region);
 
         // 获取数据库解密密钥
-        var decryptionKey = _keyManager.GetDatabaseDecryptionKey();
+        var decryptionKey = _keyManager.GetDatabaseDecryptionKey(region);
         _logger.LogDebug("Database decryption key obtained");
 
         // 扫描需要解密的数据库文件

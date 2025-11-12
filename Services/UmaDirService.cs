@@ -65,7 +65,7 @@ public class UmaDirService
             _logger.LogInformation("📋 Step 1: Decrypting meta database...");
             var metaPath = Path.Combine(options.InputPath, "meta");
             var outputMetaPath = Path.Combine(outputPath, "meta");
-            await _dbDecryptor.DecryptDatabasesAsync(options.InputPath, outputPath);
+            await _dbDecryptor.DecryptDatabasesAsync(options.InputPath, outputPath, options.Region);
 
             // 第二步：拷贝 master 文件夹
             _logger.LogInformation("📁 Step 2: Copying master folder...");
@@ -209,7 +209,9 @@ public class UmaDirService
                 OutputPath = datOutputPath,
                 MetaPath = metaPath,
                 DatabaseKey = options.DatabaseKey,
+                Region = options.Region, // 传递区域参数
                 MaxThreads = options.MaxThreads, // 传递线程数选项
+                Overwrite = options.Overwrite, // 传递覆盖选项
                 Verbose = options.Verbose
             };
 

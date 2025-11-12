@@ -1,4 +1,5 @@
 using CommandLine;
+using UmaDecryptor.Core;
 
 namespace UmaDecryptor.Commands;
 
@@ -13,6 +14,9 @@ public class UmaDirOptions
 
     [Option('k', "key", HelpText = "数据库解密密钥 (十六进制字符串，如: AABBCCDD...)")]
     public string? DatabaseKey { get; set; }
+
+    [Option('r', "region", Default = Region.Japan, HelpText = "服务器区域 (Japan=0, Global=1, 默认: Japan)")]
+    public Region Region { get; set; } = Region.Japan;
 
     [Option('t', "threads", HelpText = "dat 文件并行处理线程数 (默认: CPU 核心数)")]
     public int? MaxThreads { get; set; }

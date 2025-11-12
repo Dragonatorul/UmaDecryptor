@@ -36,6 +36,7 @@ public class DecryptDbService
         _logger.LogInformation("Starting database decryption...");
         _logger.LogInformation("Input: {InputPath}", options.InputPath);
         _logger.LogInformation("Output: {OutputPath}", options.OutputPath);
+        _logger.LogInformation("Region: {Region}", options.Region);
 
         try
         {
@@ -59,8 +60,8 @@ public class DecryptDbService
             }
             else
             {
-                _logger.LogInformation("Using default decryption key");
-                decryptionKey = _keyManager.GetDatabaseDecryptionKey();
+                _logger.LogInformation("Using default decryption key for region: {Region}", options.Region);
+                decryptionKey = _keyManager.GetDatabaseDecryptionKey(options.Region);
             }
 
             // 创建输出目录

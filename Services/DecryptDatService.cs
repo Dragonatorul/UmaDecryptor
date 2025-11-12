@@ -35,6 +35,7 @@ public class DecryptDatService
             _logger.LogInformation("📂 Input path: {InputPath}", options.InputPath);
             _logger.LogInformation("📁 Output path: {OutputPath}", options.OutputPath);
             _logger.LogInformation("🗃️ Meta database: {MetaPath}", options.MetaPath);
+            _logger.LogInformation("🌍 Region: {Region}", options.Region);
             if (skipExisting)
             {
                 _logger.LogInformation("⏭️ Skip existing files: enabled (incremental mode)");
@@ -65,7 +66,7 @@ public class DecryptDatService
             }
 
             // 读取 meta 数据库获取文件路径和密钥的映射
-            var fileKeyMap = ReadMetaDatabaseAsync(options.MetaPath, options.DatabaseKey);
+            var fileKeyMap = ReadMetaDatabaseAsync(options.MetaPath, options.DatabaseKey, options.Region);
             _logger.LogInformation("🔑 Loaded {Count} file-key mappings from meta database", fileKeyMap.Count);
 
             // 遍历 dat 文件夹并解密文件
@@ -104,7 +105,7 @@ public class DecryptDatService
     /// <summary>
     /// 读取 meta 数据库，获取文件路径(h列)到密钥(e列)的映射
     /// </summary>
-    private Dictionary<string, long> ReadMetaDatabaseAsync(string metaPath, string? databaseKey)
+    private Dictionary<string, long> ReadMetaDatabaseAsync(string metaPath, string? databaseKey, Core.Region region)
     {
         var fileKeyMap = new Dictionary<string, long>(StringComparer.OrdinalIgnoreCase);
 
@@ -114,7 +115,7 @@ public class DecryptDatService
         if (isEncrypted)
         {
             // 处理加密的数据库文件
-            ReadEncryptedDatabase(metaPath, databaseKey, fileKeyMap);
+            ReadEncryptedDatabase(metaPath, databaseKey, region, fileKeyMap);
         }
         else
         {
@@ -152,7 +153,7 @@ public class DecryptDatService
     /// <summary>
     /// 读取加密的数据库
     /// </summary>
-    private void ReadEncryptedDatabase(string metaPath, string? databaseKey, Dictionary<string, long> fileKeyMap)
+    private void ReadEncryptedDatabase(string metaPath, string? databaseKey, Core.Region region, Dictionary<string, long> fileKeyMap)
     {
         // 确定数据库密钥
         byte[] keyBytes;
@@ -162,7 +163,7 @@ public class DecryptDatService
         }
         else
         {
-            keyBytes = _keyManager.GetDatabaseDecryptionKey();
+            keyBytes = _keyManager.GetDatabaseDecryptionKey(region);
         }
 
         // 打开加密的数据库
