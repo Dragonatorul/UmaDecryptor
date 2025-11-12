@@ -1,10 +1,4 @@
-# UmaDe- **📋 完整数据库解密**: 解密 meta 数据库，保留所有表结构和数据（包括赛马数据等）
-- **🔓 资源文件解密**: 解密游戏资源文件（AssetBundle等），支持任意目录结构
-- **📁 目录批处理**: 一键处理整个游戏数据目录
-- **⚡ 智能增量更新**: 默认跳过已存在文件，游戏更新后只处理新增内容
-- **🔄 灵活更新模式**: 使用 `--overwrite` 选项轻松切换增量/全量模式
-- **🚀 多线程并行**: 高效处理大量文件，充分利用CPU资源
-- **🛠️ 灵活配置**: 支持自定义密钥和详细日志模式r
+# UmaDecryptor
 
 UMA赛马娘游戏数据解密工具 - 一个功能完整的.NET 8控制台应用程序，支持解密UMA游戏的数据库文件和资源文件。
 
@@ -12,11 +6,12 @@ UMA赛马娘游戏数据解密工具 - 一个功能完整的.NET 8控制台应�
 
 ### 核心能力
 - **📋 完整数据库解密**: 解密 meta 数据库，保留所有表结构和数据（包括赛马数据等）
+- **🌍 多区域支持**: 支持日服和Global国际服，自动使用对应的解密密钥
 - **🔓 资源文件解密**: 解密游戏资源文件（AssetBundle等），支持任意目录结构
 - **📁 目录批处理**: 一键处理整个游戏数据目录
 - **⚡ 增量更新**: 智能跳过已存在文件，游戏更新后只处理新增内容
-- **� 多线程并行**: 高效处理大量文件，充分利用CPU资源
-- **�🛠️ 灵活配置**: 支持自定义密钥和详细日志模式
+- **🚀 多线程并行**: 高效处理大量文件，充分利用CPU资源
+- **🛠️ 灵活配置**: 支持自定义密钥和详细日志模式
 
 ### 三大命令
 
@@ -26,6 +21,9 @@ UMA赛马娘游戏数据解密工具 - 一个功能完整的.NET 8控制台应�
 ```bash
 # 处理整个游戏目录（增量模式，默认跳过已存在文件）
 UmaDecryptor.exe uma-dir -i "C:\Users\User\AppData\LocalLow\Cygames\umamusume" -o "C:\UMA_Decrypted"
+
+# Global国际服解密
+UmaDecryptor.exe uma-dir -i "C:\Games\UMA_Global" -o "C:\Games\UMA_Global_Decrypted" -r Global
 
 # 全量模式（覆盖所有已存在文件）
 UmaDecryptor.exe uma-dir -i "C:\Games\UMA" -o "C:\Games\UMA_Decrypted" --overwrite
@@ -52,6 +50,9 @@ UmaDecryptor.exe uma-dir -i "C:\Games\UMA" -o "C:\Games\UMA_Decrypted" -t 8
 # 基本解密（输出无后缀）
 UmaDecryptor.exe decrypt-db -i meta -o meta_decrypted
 
+# Global国际服解密
+UmaDecryptor.exe decrypt-db -i meta -o meta_global -r Global
+
 # 使用自定义密钥
 UmaDecryptor.exe decrypt-db -i meta -o meta_decrypted -k "9C2BAB97BCF8C0C4..."
 
@@ -63,6 +64,7 @@ UmaDecryptor.exe decrypt-db -i meta -o meta_decrypted -v
 - ✅ **完整数据库**: 读取所有表，包括全部文件加密数据
 - ✅ **表结构保持**: 完整重建所有表结构和索引
 - ✅ **标准输出**: 生成标准SQLite文件，可用任何SQLite工具打开
+- ✅ **多区域支持**: 支持日服和Global服，使用 `-r` 参数指定
 
 #### 3. `decrypt-dat` - 资源文件解密 🗂️
 解密资源文件夹，支持任意目录结构，不限于标准的dat文件夹格式。
@@ -70,6 +72,9 @@ UmaDecryptor.exe decrypt-db -i meta -o meta_decrypted -v
 ```bash
 # 解密标准dat文件夹（增量模式，默认跳过已存在文件）
 UmaDecryptor.exe decrypt-dat -i "C:\Game\dat" -o "C:\Game\dat_decrypted" -m "meta_decrypted"
+
+# Global国际服资源解密
+UmaDecryptor.exe decrypt-dat -i "C:\Game\dat" -o "C:\Game\dat_decrypted" -m "meta_global" -r Global
 
 # 全量模式（覆盖所有已存在文件）
 UmaDecryptor.exe decrypt-dat -i "C:\Game\dat" -o "C:\Game\dat_decrypted" -m "meta_decrypted" --overwrite
@@ -88,15 +93,23 @@ UmaDecryptor.exe decrypt-dat -i "C:\Game\dat" -o "C:\Game\dat_decrypted" -m "met
 - 🔍 **递归处理**: 自动扫描所有子目录
 - ⚡ **增量更新**: 默认跳过已存在文件，提升处理效率
 
-## 🆕 v1.1.0+ 新功能
+## 🆕 更新日志
 
-### ⚡ 智能更新模式
+### v1.2.0 (2025-11-12)
+- 🌍 **添加Global服务器支持**: 完整支持国际服数据解密
+- 🔑 **修复密钥生成逻辑**: 实现与UmaViewer相同的DBBaseKey XOR运算
+- 📋 **新增Region参数**: 所有命令支持 `-r/--region` 选项（Japan/Global）
+- ✅ **密钥匹配UmaViewer**: 使用完全相同的密钥和解密算法
+- 🧪 **测试通过**: Global服务器meta数据库解密验证成功
+
+### v1.1.0+
+#### ⚡ 智能更新模式
 - **默认增量**: 自动检测并跳过已存在的文件，提升处理效率
 - **简化选项**: 使用直观的 `--overwrite` 选项控制更新模式
 - **灵活切换**: 随时在增量和全量模式间切换
 - **高效更新**: 游戏版本更新后只需处理新增文件
 
-### 📊 增强的进度报告
+#### 📊 增强的进度报告
 ```
 🚀 Starting dat files decryption
 ⏭️ Skip existing files: enabled (incremental mode)
@@ -105,7 +118,7 @@ UmaDecryptor.exe decrypt-dat -i "C:\Game\dat" -o "C:\Game\dat_decrypted" -m "met
 📊 Final stats: 5000 processed, ✅4500 success, ⏭️450 skipped, ❌50 errors
 ```
 
-### 🎯 使用模式对比
+#### 🎯 使用模式对比
 ```bash
 # 增量模式（默认）- 跳过已存在文件
 UmaDecryptor.exe decrypt-dat -i input -o output -m meta
@@ -114,7 +127,7 @@ UmaDecryptor.exe decrypt-dat -i input -o output -m meta
 UmaDecryptor.exe decrypt-dat -i input -o output -m meta --overwrite
 ```
 
-### 🚀 性能优化
+#### 🚀 性能优化
 - **多线程并行**: 默认使用CPU核心数，可自定义线程数
 - **内存优化**: 流式处理大文件，减少内存占用
 - **网络友好**: 适合处理网络存储上的大型游戏目录
