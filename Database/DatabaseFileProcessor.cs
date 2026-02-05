@@ -4,7 +4,7 @@ using Microsoft.Data.Sqlite;
 namespace UmaDecryptor.Database;
 
 /// <summary>
-/// 数据库文件处理器 - 负责使用sqlite3mc解密UMA数据库
+/// Database file processor - responsible for decrypting UMA database using sqlite3mc
 /// </summary>
 public class DatabaseFileProcessor
 {
@@ -16,7 +16,7 @@ public class DatabaseFileProcessor
     }
 
     /// <summary>
-    /// 解密数据库文件 - 使用sqlite3mc读取加密数据库并生成解密版本
+    /// Decrypt database file - use sqlite3mc to read encrypted database and generate decrypted version
     /// </summary>
     public async Task DecryptDatabaseFileAsync(string inputFilePath, string outputFilePath, byte[] key)
     {
@@ -37,7 +37,7 @@ public class DatabaseFileProcessor
     }
 
     /// <summary>
-    /// 解密Meta文件 - 使用sqlite3mc读取加密数据库
+    /// Decrypt Meta file - use sqlite3mc to read encrypted database
     /// </summary>
     private async Task DecryptMetaFileAsync(string inputFilePath, string outputFilePath, byte[] key)
     {
@@ -49,15 +49,15 @@ public class DatabaseFileProcessor
             
             try
             {
-                // 打开加密的数据库
+                // Open encrypted database
                 _logger.LogDebug("Opening encrypted database: {InputFile}", inputFilePath);
                 db = Sqlite3MC.Open(inputFilePath);
 
-                // 设置cipher index (根据您的代码，使用cipher index 3)
+                // Set cipher index (according to your code, use cipher index 3)
                 int cfgRc = Sqlite3MC.MC_Config(db, "cipher", 3);
                 _logger.LogDebug("sqlite3mc_config(cipher, 3) returned: {ReturnCode}", cfgRc);
 
-                // 设置解密密钥
+                // Set decryption key
                 int rcKey = Sqlite3MC.Key_SetBytes(db, key);
                 if (rcKey != Sqlite3MC.SQLITE_OK)
                 {
@@ -65,7 +65,7 @@ public class DatabaseFileProcessor
                     throw new InvalidOperationException($"sqlite3_key returned rc={rcKey}, errmsg={em}");
                 }
 
-                // 验证数据库是否可读
+                // Verify if database is readable
                 if (!Sqlite3MC.ValidateReadable(db, out string? validateErr))
                 {
                     throw new InvalidOperationException($"Database validation failed after key setup: {validateErr}");
@@ -73,7 +73,7 @@ public class DatabaseFileProcessor
 
                 _logger.LogInformation("Successfully opened and validated encrypted database");
 
-                // 读取数据并创建解密的数据库
+                // Read data and create decrypted database
                 var entries = ReadMetaEntriesFromDatabase(db);
                 _logger.LogInformation("Read {EntryCount} entries from encrypted database", entries.Count);
 
@@ -106,13 +106,13 @@ public class DatabaseFileProcessor
     }
 
     /// <summary>
-    /// 从加密数据库中读取Meta条目
+    /// Read Meta entries from encrypted database
     /// </summary>
     private Dictionary<string, UmaDatabaseEntry> ReadMetaEntriesFromDatabase(IntPtr db)
     {
         var entries = new Dictionary<string, UmaDatabaseEntry>(StringComparer.Ordinal);
         
-        // 查询所有列，更简洁和灵活
+        // Query all columns, more concise and flexible
         string sql = "SELECT * FROM a";
         
         _logger.LogDebug("Executing query: {Sql}", sql);
@@ -123,7 +123,7 @@ public class DatabaseFileProcessor
             {
                 try
                 {
-                    // 读取列数据 (按标准顺序：m,n,h,c,d,e)
+                    // Read column data (in standard order: m,n,h,c,d,e)
                     string? m = Sqlite3MC.ColumnText(stmt, 0); // type
                     string? n = Sqlite3MC.ColumnText(stmt, 1); // name
                     string? h = Sqlite3MC.ColumnText(stmt, 2); // url
@@ -131,7 +131,7 @@ public class DatabaseFileProcessor
                     string? d = Sqlite3MC.ColumnText(stmt, 4); // dependencies
                     string? e = Sqlite3MC.ColumnText(stmt, 5); // key
 
-                    // 验证必要字段
+                    // Validate required fields
                     if (string.IsNullOrEmpty(m))
                     {
                         _logger.LogWarning("Skipping row: empty type string (m)");
@@ -144,7 +144,7 @@ public class DatabaseFileProcessor
                         return;
                     }
 
-                    // 创建条目 (包含所有列)
+                    // Create entry (including all columns)
                     var entry = new UmaDatabaseEntry
                     {
                         Type = m,
@@ -155,7 +155,7 @@ public class DatabaseFileProcessor
                         Key = e
                     };
 
-                    // 添加到字典（去重）
+                    // Add to dictionary (deduplication)
                     if (!entries.ContainsKey(entry.Name))
                     {
                         entries.Add(entry.Name, entry);
@@ -177,26 +177,26 @@ public class DatabaseFileProcessor
     }
 
     /// <summary>
-    /// 创建解密后的SQLite数据库
+    /// Create decrypted SQLite database
     /// </summary>
     private void CreateDecryptedDatabase(string outputPath, Dictionary<string, UmaDatabaseEntry> entries)
     {
         _logger.LogDebug("Creating decrypted database: {OutputPath}", outputPath);
         
-        // 确保输出目录存在
+        // Ensure output directory exists
         var outputDir = Path.GetDirectoryName(outputPath);
         if (!string.IsNullOrEmpty(outputDir))
         {
             Directory.CreateDirectory(outputDir);
         }
 
-        // 删除现有文件
+        // Delete existing file
         if (File.Exists(outputPath))
         {
             File.Delete(outputPath);
         }
 
-        // 创建SQLite连接字符串
+        // Create SQLite connection string
         var connectionString = $"Data Source={outputPath}";
         
         using var connection = new SqliteConnection(connectionString);
@@ -225,7 +225,7 @@ public class DatabaseFileProcessor
             
             _logger.LogDebug("Created table structure with all 6 columns in decrypted database");
 
-            // 插入数据
+            // Insert data
             using var transaction = connection.BeginTransaction();
             
             var insertSql = "INSERT INTO a (m, n, h, c, d, e) VALUES (@m, @n, @h, @c, @d, @e)";
@@ -263,7 +263,7 @@ public class DatabaseFileProcessor
     }
 
     /// <summary>
-    /// 解密通用数据库文件 (扩展用)
+    /// Decrypt generic database file (for extension)
     /// </summary>
     private async Task DecryptGenericDatabaseAsync(string inputFilePath, string outputFilePath, byte[] key)
     {
@@ -279,7 +279,7 @@ public class DatabaseFileProcessor
     }
 
     /// <summary>
-    /// 验证解密结果
+    /// Validate decryption results
     /// </summary>
     public async Task<bool> ValidateDecryptedFileAsync(string filePath)
     {
@@ -313,7 +313,7 @@ public class DatabaseFileProcessor
     }
 
     /// <summary>
-    /// 验证SQLite数据库连接
+    /// Validate SQLite database connection
     /// </summary>
     private bool ValidateSQLiteDatabase(string dbPath)
     {

@@ -6,7 +6,7 @@ using UmaDecryptor.Database;
 namespace UmaDecryptor.Services;
 
 /// <summary>
-/// UMA目录处理服务
+/// UMA directory processing service
 /// </summary>
 public class UmaDirService
 {
@@ -20,7 +20,7 @@ public class UmaDirService
         _logger = logger;
         _decryptDatService = decryptDatService;
         
-        // 为子组件创建专用的logger
+        // Create dedicated logger for child components
         using var loggerFactory = LoggerFactory.Create(builder =>
         {
             builder.AddConsole().SetMinimumLevel(LogLevel.Information);
@@ -31,49 +31,49 @@ public class UmaDirService
     }
 
     /// <summary>
-    /// 异步处理UMA目录
+    /// Asynchronously process UMA directory
     /// </summary>
     public async Task ProcessAsync(UmaDirOptions options)
     {
         _logger.LogInformation("🚀 Starting UMA directory processing...");
         _logger.LogInformation("📂 Input path: {InputPath}", options.InputPath);
 
-        // 验证输入目录
+        // Validate input directory
         if (!await _directoryValidator.ValidateAsync(options.InputPath))
         {
             _logger.LogError("❌ Invalid UMA directory structure");
             return;
         }
 
-        // 如果只是查看信息
+        // If only viewing information
         if (options.InfoOnly)
         {
             await DisplayDirectoryInfoAsync(options.InputPath);
             return;
         }
 
-        // 设置输出目录
+        // Set output directory
         var outputPath = options.OutputPath ?? Path.Combine(options.InputPath, "decrypted");
         _logger.LogInformation("📁 Output path: {OutputPath}", outputPath);
 
-        // 创建输出目录
+        // Create output directory
         Directory.CreateDirectory(outputPath);
 
         try
         {
-            // 第一步：解密 meta 数据库
+            // Step 1: Decrypt meta database
             _logger.LogInformation("📋 Step 1: Decrypting meta database...");
             var metaPath = Path.Combine(options.InputPath, "meta");
             var outputMetaPath = Path.Combine(outputPath, "meta");
             await _dbDecryptor.DecryptDatabasesAsync(options.InputPath, outputPath, options.Region);
 
-            // 第二步：拷贝 master 文件夹
+            // Step 2: Copy master folder
             _logger.LogInformation("📁 Step 2: Copying master folder...");
             var masterSourcePath = Path.Combine(options.InputPath, "master");
             var masterOutputPath = Path.Combine(outputPath, "master");
             await CopyMasterFolderAsync(masterSourcePath, masterOutputPath, !options.Overwrite);
 
-            // 第三步：解密 dat 文件夹
+            // Step 3: Decrypt dat folder
             _logger.LogInformation("🔓 Step 3: Decrypting dat folder...");
             var datSourcePath = Path.Combine(options.InputPath, "dat");
             var datOutputPath = Path.Combine(outputPath, "dat");
@@ -90,17 +90,17 @@ public class UmaDirService
     }
 
     /// <summary>
-    /// 显示目录信息
+    /// Display directory information
     /// </summary>
     private async Task DisplayDirectoryInfoAsync(string inputPath)
     {
         _logger.LogInformation("=== UMA Directory Information ===");
         
-        // 显示meta文件信息
+// Display meta file information
         var metaPath = Path.Combine(inputPath, "meta");
         await DisplayMetaFileInfoAsync(metaPath);
         
-        // 显示各个目录的文件统计
+        // Display file statistics for each directory
         var masterPath = Path.Combine(inputPath, "master");
         var datPath = Path.Combine(inputPath, "dat");
 
@@ -109,7 +109,7 @@ public class UmaDirService
     }
 
     /// <summary>
-    /// 显示meta文件信息
+    /// Display meta file information
     /// </summary>
     private async Task DisplayMetaFileInfoAsync(string metaPath)
     {
@@ -148,7 +148,7 @@ public class UmaDirService
     }
 
     /// <summary>
-    /// 拷贝 master 文件夹
+    /// Copy master folder
     /// </summary>
     private async Task CopyMasterFolderAsync(string sourcePath, string outputPath, bool skipExisting = false)
     {
@@ -162,7 +162,7 @@ public class UmaDirService
         {
             try
             {
-                // 递归拷贝所有文件和子目录
+                // Recursively copy all files and subdirectories
                 var (copiedFiles, skippedFiles) = CopyDirectory(sourcePath, outputPath, true, skipExisting);
                 
                 if (skipExisting && skippedFiles > 0)
@@ -184,7 +184,7 @@ public class UmaDirService
     }
 
     /// <summary>
-    /// 解密 dat 文件夹
+    /// Decrypt dat folder
     /// </summary>
     private async Task DecryptDatFolderAsync(string datSourcePath, string datOutputPath, string metaPath, UmaDirOptions options)
     {
@@ -202,16 +202,16 @@ public class UmaDirService
 
         try
         {
-            // 创建 DecryptDatOptions 来调用 DecryptDatService
+            // Create DecryptDatOptions to call DecryptDatService
             var datOptions = new DecryptDatOptions
             {
                 InputPath = datSourcePath,
                 OutputPath = datOutputPath,
                 MetaPath = metaPath,
                 DatabaseKey = options.DatabaseKey,
-                Region = options.Region, // 传递区域参数
-                MaxThreads = options.MaxThreads, // 传递线程数选项
-                Overwrite = options.Overwrite, // 传递覆盖选项
+                Region = options.Region, // Pass region parameter
+                MaxThreads = options.MaxThreads, // Pass thread count option
+                Overwrite = options.Overwrite, // Pass overwrite option
                 Verbose = options.Verbose
             };
 
@@ -230,27 +230,27 @@ public class UmaDirService
     }
 
     /// <summary>
-    /// 递归拷贝目录
+    /// Recursively copy directory
     /// </summary>
     private (int copiedFiles, int skippedFiles) CopyDirectory(string sourceDir, string destinationDir, bool recursive, bool skipExisting = false)
     {
-        // 获取源目录信息
+        // Get source directory information
         var dir = new DirectoryInfo(sourceDir);
 
-        // 检查源目录是否存在
+        // Check if source directory exists
         if (!dir.Exists)
             throw new DirectoryNotFoundException($"Source directory not found: {dir.FullName}");
 
-        // 缓存目录信息，避免重复查询
+        // Cache directory information to avoid repeated queries
         DirectoryInfo[] dirs = dir.GetDirectories();
 
-        // 创建目标目录
+        // Create target directory
         Directory.CreateDirectory(destinationDir);
 
         int copiedFiles = 0;
         int skippedFiles = 0;
 
-        // 拷贝所有文件到目标目录
+        // Copy all files to target directory
         foreach (FileInfo file in dir.GetFiles())
         {
             string targetFilePath = Path.Combine(destinationDir, file.Name);
@@ -269,7 +269,7 @@ public class UmaDirService
             copiedFiles++;
         }
 
-        // 如果需要递归拷贝子目录
+        // If need to recursively copy subdirectories
         if (recursive)
         {
             foreach (DirectoryInfo subDir in dirs)

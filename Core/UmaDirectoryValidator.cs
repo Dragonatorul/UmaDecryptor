@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging;
 namespace UmaDecryptor.Core;
 
 /// <summary>
-/// UMA目录结构验证器
+/// UMA directory structure validator
 /// </summary>
 public class UmaDirectoryValidator
 {
@@ -15,7 +15,7 @@ public class UmaDirectoryValidator
     }
 
     /// <summary>
-    /// 异步验证UMA目录结构
+    /// Asynchronously validate UMA directory structure
     /// </summary>
     public async Task<bool> ValidateAsync(string path)
     {
@@ -27,10 +27,10 @@ public class UmaDirectoryValidator
 
         var validationTasks = new List<Task<bool>>();
         
-        // 验证meta文件（注意：meta是文件，不是文件夹）
+        // Validate meta file (note: meta is a file, not a folder)
         validationTasks.Add(ValidateMetaFileAsync(path));
         
-        // 验证文件夹
+        // Validate folders
         var requiredFolders = new[] { "master", "dat" };
         validationTasks.AddRange(requiredFolders.Select(folder => ValidateFolderAsync(path, folder)));
         
@@ -50,7 +50,7 @@ public class UmaDirectoryValidator
     }
 
     /// <summary>
-    /// 验证meta文件
+    /// Validate meta file
     /// </summary>
     private async Task<bool> ValidateMetaFileAsync(string basePath)
     {
@@ -77,7 +77,7 @@ public class UmaDirectoryValidator
     }
 
     /// <summary>
-    /// 验证单个文件夹
+    /// Validate single folder
     /// </summary>
     private async Task<bool> ValidateFolderAsync(string basePath, string folderName)
     {

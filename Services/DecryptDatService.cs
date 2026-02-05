@@ -8,7 +8,7 @@ using UmaDecryptor.Database;
 namespace UmaDecryptor.Services;
 
 /// <summary>
-/// dat 文件解密服务
+/// Dat file decryption service
 /// </summary>
 public class DecryptDatService
 {
@@ -22,13 +22,13 @@ public class DecryptDatService
     }
 
     /// <summary>
-    /// 执行 dat 文件解密
+    /// Execute dat file decryption
     /// </summary>
     public async Task<int> ExecuteAsync(DecryptDatOptions options)
     {
         try
         {
-            // 计算是否跳过已存在文件：如果设置了 overwrite，则不跳过
+            // Calculate whether to skip existing files: if overwrite is set, do not skip
             bool skipExisting = !options.Overwrite;
 
             _logger.LogInformation("🚀 Starting dat files decryption");
@@ -65,11 +65,11 @@ public class DecryptDatService
                 _logger.LogInformation("📁 Created output directory: {OutputPath}", options.OutputPath);
             }
 
-            // 读取 meta 数据库获取文件路径和密钥的映射
+            // Read meta database to get file path and key mappings
             var fileKeyMap = ReadMetaDatabaseAsync(options.MetaPath, options.DatabaseKey, options.Region);
             _logger.LogInformation("🔑 Loaded {Count} file-key mappings from meta database", fileKeyMap.Count);
 
-            // 遍历 dat 文件夹并解密文件
+            // Traverse dat folder and decrypt files
             int processedCount = 0;
             int successCount = 0;
             int errorCount = 0;
@@ -103,7 +103,7 @@ public class DecryptDatService
     }
 
     /// <summary>
-    /// 读取 meta 数据库，获取文件路径(h列)到密钥(e列)的映射
+    /// Read meta database, get file path (h column) to key (e column) mappings
     /// </summary>
     private Dictionary<string, long> ReadMetaDatabaseAsync(string metaPath, string? databaseKey, Core.Region region)
     {
@@ -127,7 +127,7 @@ public class DecryptDatService
     }
 
     /// <summary>
-    /// 检查数据库文件是否为加密文件
+    /// Check if database file is encrypted
     /// </summary>
     private bool IsEncryptedDatabase(string filePath)
     {
@@ -151,11 +151,11 @@ public class DecryptDatService
     }
 
     /// <summary>
-    /// 读取加密的数据库
+    /// Read encrypted database
     /// </summary>
     private void ReadEncryptedDatabase(string metaPath, string? databaseKey, Core.Region region, Dictionary<string, long> fileKeyMap)
     {
-        // 确定数据库密钥
+        // Determine database key
         byte[] keyBytes;
         if (!string.IsNullOrEmpty(databaseKey))
         {
@@ -166,14 +166,14 @@ public class DecryptDatService
             keyBytes = _keyManager.GetDatabaseDecryptionKey(region);
         }
 
-        // 打开加密的数据库
+        // Open encrypted database
         IntPtr db = IntPtr.Zero;
         try
         {
             db = Sqlite3MC.Open(metaPath);
             Sqlite3MC.Key_SetBytes(db, keyBytes);
 
-            // 测试数据库连接
+            // Test database connection
             if (!Sqlite3MC.ValidateReadable(db, out string? errorMsg))
             {
                 throw new InvalidOperationException($"Failed to decrypt meta database. Check your key. Error: {errorMsg}");
@@ -193,7 +193,7 @@ public class DecryptDatService
     }
 
     /// <summary>
-    /// 读取解密后的标准数据库
+    /// Read decrypted standard database
     /// </summary>
     private void ReadDecryptedDatabase(string metaPath, Dictionary<string, long> fileKeyMap)
     {
@@ -203,7 +203,7 @@ public class DecryptDatService
 
         _logger.LogInformation("✅ Successfully opened decrypted meta database");
 
-        // 查询 a 表，获取 h(url) 和 e(key) 列
+        // Query a table, get h(url) and e(key) columns
         const string query = "SELECT h, e FROM a WHERE h IS NOT NULL AND e IS NOT NULL AND h != '' AND e != ''";
         
         using var command = new Microsoft.Data.Sqlite.SqliteCommand(query, connection);
@@ -237,11 +237,11 @@ public class DecryptDatService
     }
 
     /// <summary>
-    /// 读取数据库内容（使用 sqlite3mc）
+    /// Read database content (using sqlite3mc)
     /// </summary>
     private void ReadDatabaseContent(IntPtr db, Dictionary<string, long> fileKeyMap)
     {
-        // 查询 a 表，获取 h(url) 和 e(key) 列
+        // Query a table, get h(url) and e(key) columns
         const string query = "SELECT h, e FROM a WHERE h IS NOT NULL AND e IS NOT NULL AND h != '' AND e != ''";
         
         Sqlite3MC.ForEachRow(query, db, (stmt) =>
@@ -272,19 +272,19 @@ public class DecryptDatService
     }
 
     /// <summary>
-    /// 递归处理输入目录中的所有文件（并行处理）
+    /// Recursively process all files in input directory (parallel processing)
     /// </summary>
     private async Task ProcessDatDirectoryAsync(string inputDir, string outputDir, 
         Dictionary<string, long> fileKeyMap, DecryptDatOptions options, bool skipExisting, Action<int, int, int, int> progressCallback)
     {
-        // 线程安全的计数器
+        // Thread-safe counters
         int processedCount = 0;
         int successCount = 0;
         int errorCount = 0;
         int skippedCount = 0;
         var lockObj = new object();
 
-        // 递归遍历所有文件（不限制目录结构）
+        // Recursively traverse all files (no directory structure restrictions)
         var allFiles = Directory.GetFiles(inputDir, "*", SearchOption.AllDirectories);
         
         _logger.LogInformation("📁 Found {FileCount} files to process", allFiles.Length);
@@ -296,7 +296,7 @@ public class DecryptDatService
             return;
         }
 
-        // 配置并行选项
+        // Configure parallel options
         int maxThreads = options.MaxThreads ?? Environment.ProcessorCount;
         var parallelOptions = new ParallelOptions
         {
@@ -306,7 +306,7 @@ public class DecryptDatService
 
         _logger.LogInformation("🚀 Starting parallel decryption with {ThreadCount} threads", parallelOptions.MaxDegreeOfParallelism);
 
-        // 进度报告任务
+        // Progress reporting task
         var progressReportingTask = Task.Run(async () =>
         {
             while (true)
@@ -340,7 +340,7 @@ public class DecryptDatService
             }
         });
 
-        // 并行处理所有文件
+        // Parallel processing of all files
         await Task.Run(() =>
         {
             Parallel.ForEach(allFiles, parallelOptions, filePath =>
@@ -358,7 +358,7 @@ public class DecryptDatService
                     // 构造输出路径（保持相同的目录结构）
                     string outputFilePath = Path.Combine(outputDir, relativePath);
                     
-                    // 检查是否需要跳过已存在的文件
+                    // Check if need to skip existing files
                     if (skipExisting && File.Exists(outputFilePath))
                     {
                         localSkipped = 1;
@@ -372,7 +372,7 @@ public class DecryptDatService
                     }
                     else
                     {
-                        // 查找对应的解密密钥
+                        // Find corresponding decryption key
                         if (!fileKeyMap.TryGetValue(fileName, out long key))
                         {
                             _logger.LogWarning("⚠️ No decryption key found for file: {FileName} (path: {RelativePath})", 
@@ -383,7 +383,7 @@ public class DecryptDatService
                         {
                             string? outputDirPath = Path.GetDirectoryName(outputFilePath);
                             
-                            // 确保输出目录存在（线程安全）
+                            // Ensure output directory exists (thread-safe)
                             if (!string.IsNullOrEmpty(outputDirPath))
                             {
                                 lock (lockObj)
@@ -395,7 +395,7 @@ public class DecryptDatService
                                 }
                             }
 
-                            // 解密文件
+                            // Decrypt file
                             AssetBundleDecryptor.DecryptFileToFile(filePath, outputFilePath, key);
                             
                             localSuccess = 1;
@@ -420,14 +420,14 @@ public class DecryptDatService
                     errorCount += localError;
                     skippedCount += localSkipped;
                     
-                    // 显示前几个成功的文件
+                    // Display first few successful files
                     if (localSuccess == 1 && successCount <= 5)
                     {
                         string relativePath = Path.GetRelativePath(inputDir, filePath);
                         _logger.LogInformation("🔓 Decrypted: {RelativePath}", relativePath);
                     }
                     
-                    // 显示前几个跳过的文件
+                    // Display first few skipped files
                     if (localSkipped == 1 && skippedCount <= 3)
                     {
                         string relativePath = Path.GetRelativePath(inputDir, filePath);
@@ -437,10 +437,10 @@ public class DecryptDatService
             });
         });
 
-        // 停止进度报告任务
+        // Stop progress reporting task
         await progressReportingTask;
 
-        // 最终报告
+        // Final report
         progressCallback(processedCount, successCount, errorCount, skippedCount);
         
         _logger.LogInformation("🎉 Parallel decryption completed!");
@@ -458,7 +458,7 @@ public class DecryptDatService
     }
 
     /// <summary>
-    /// 解析十六进制密钥字符串
+    /// Parse hexadecimal key string
     /// </summary>
     private byte[] ParseHexKey(string hexKey)
     {

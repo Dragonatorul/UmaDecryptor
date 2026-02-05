@@ -4,20 +4,20 @@ using UmaDecryptor.Core;
 namespace UmaDecryptor.Database;
 
 /// <summary>
-/// UMA数据库密钥管理器
+/// UMA database key manager
 /// </summary>
 public class UmaDatabaseKeyManager
 {
     private readonly ILogger<UmaDatabaseKeyManager> _logger;
     
-    // UMA数据库基础密钥 (用于XOR运算生成最终密钥)
+    // UMA database base key (used for XOR operation to generate final key)
     private static readonly byte[] DATABASE_BASE_KEY = new byte[16] 
     {
         0xF1, 0x70, 0xCE, 0xA4, 0xDF, 0xCE, 0xA3, 0xE1,
         0xA5, 0xD8, 0xC7, 0x0B, 0xD1, 0x00, 0x00, 0x00
     };
     
-    // UMA数据库解密密钥 - 日本服务器（32字节，需要与BaseKey进行XOR）
+    // UMA database decryption key - Japan server (32 bytes, needs XOR with BaseKey)
     private static readonly byte[] DATABASE_KEY_JAPAN = new byte[32] 
     {
         0x6D, 0x5B, 0x65, 0x33, 0x63, 0x36, 0x63, 0x25, 0x54, 0x71, 0x2D, 0x73,
@@ -25,7 +25,7 @@ public class UmaDatabaseKeyManager
         0x37, 0x34, 0x53, 0x29, 0x73, 0x43, 0x36, 0x33
     };
 
-    // UMA数据库解密密钥 - Global服务器（12字节，需要与BaseKey进行XOR）
+    // UMA database decryption key - Global server (12 bytes, needs XOR with BaseKey)
     private static readonly byte[] DATABASE_KEY_GLOBAL = new byte[12] 
     {
         0x56, 0x63, 0x6B, 0x63, 0x42, 0x72, 0x37, 0x76, 0x65, 0x70, 0x41, 0x62
@@ -37,9 +37,9 @@ public class UmaDatabaseKeyManager
     }
 
     /// <summary>
-    /// 获取数据库解密密钥（根据区域选择）
+    /// Get database decryption key (select based on region)
     /// </summary>
-    /// <param name="region">服务器区域</param>
+    /// <param name="region">Server region</param>
     public byte[] GetDatabaseDecryptionKey(Region region = Region.Japan)
     {
         byte[] baseKey = region switch
@@ -55,7 +55,7 @@ public class UmaDatabaseKeyManager
             throw new InvalidOperationException($"Database decryption key is not set for region: {region}");
         }
 
-        // 生成最终密钥（与BaseKey进行XOR运算）
+        // Generate final key (XOR with BaseKey)
         byte[] finalKey = GenerateFinalKey(baseKey);
 
         _logger.LogDebug("Database decryption key retrieved for region {Region} (original length: {OriginalLength}, final length: {FinalLength})", 
@@ -65,8 +65,8 @@ public class UmaDatabaseKeyManager
     }
 
     /// <summary>
-    /// 生成最终密钥（与DBBaseKey进行XOR运算）
-    /// 这个逻辑与UmaViewer的GenFinalKey函数相同
+    /// Generate final key (XOR with DBBaseKey)
+    /// This logic is the same as UmaViewer's GenFinalKey function
     /// </summary>
     private byte[] GenerateFinalKey(byte[] key)
     {
@@ -86,7 +86,7 @@ public class UmaDatabaseKeyManager
     }
 
     /// <summary>
-    /// 获取数据库解密密钥（兼容旧版本的无参数版本）
+    /// Get database decryption key (compatible with old version without parameters)
     /// </summary>
     [Obsolete("Use GetDatabaseDecryptionKey(Region region) instead")]
     public byte[] GetDatabaseDecryptionKey()

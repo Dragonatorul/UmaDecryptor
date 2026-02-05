@@ -4,32 +4,32 @@ using UmaDecryptor.Core;
 namespace UmaDecryptor.Commands;
 
 /// <summary>
-/// decrypt-dat 命令选项
+/// decrypt-dat command options
 /// </summary>
-[Verb("decrypt-dat", HelpText = "解密资源文件夹中的文件 (支持任意目录结构)")]
+[Verb("decrypt-dat", HelpText = "Decrypt files in resource folder (supports arbitrary directory structure)")]
 public class DecryptDatOptions
 {
-    [Option('i', "input", Required = true, HelpText = "输入路径 (包含需要解密文件的文件夹，支持任意目录结构)")]
+    [Option('i', "input", Required = true, HelpText = "Input path (folder containing files to decrypt, supports arbitrary directory structure)")]
     public string InputPath { get; set; } = string.Empty;
 
-    [Option('o', "output", Required = true, HelpText = "输出路径 (解密后文件夹路径，保持原目录结构)")]
+    [Option('o', "output", Required = true, HelpText = "Output path (decrypted folder path, maintains original directory structure)")]
     public string OutputPath { get; set; } = string.Empty;
 
-    [Option('m', "meta", Required = true, HelpText = "meta数据库文件路径 (用于获取文件名与解密密钥的映射关系)")]
+    [Option('m', "meta", Required = true, HelpText = "Meta database file path (used to get mapping between filenames and decryption keys)")]
     public string MetaPath { get; set; } = string.Empty;
 
-    [Option('k', "key", Required = false, HelpText = "数据库解密密钥 (十六进制字符串，如: AABBCCDD...)")]
+    [Option('k', "key", Required = false, HelpText = "Database decryption key (hexadecimal string, e.g.: AABBCCDD...)")]
     public string? DatabaseKey { get; set; }
 
-    [Option('r', "region", Default = Region.Japan, HelpText = "服务器区域 (Japan=0, Global=1, 默认: Japan)")]
+    [Option('r', "region", Default = Region.Japan, HelpText = "Server region (Japan=0, Global=1, default: Japan)")]
     public Region Region { get; set; } = Region.Japan;
 
-    [Option('t', "threads", Required = false, HelpText = "并行处理线程数 (默认: CPU核心数)")]
+    [Option('t', "threads", Required = false, HelpText = "Number of parallel processing threads (default: CPU core count)")]
     public int? MaxThreads { get; set; }
 
-    [Option("overwrite", Required = false, HelpText = "覆盖已存在的文件 (全量更新模式)")]
+    [Option("overwrite", Required = false, HelpText = "Overwrite existing files (full update mode)")]
     public bool Overwrite { get; set; } = false;
 
-    [Option('v', "verbose", Required = false, HelpText = "显示详细日志")]
+    [Option('v', "verbose", Required = false, HelpText = "Show detailed logs")]
     public bool Verbose { get; set; }
 }

@@ -1,26 +1,26 @@
 namespace UmaDecryptor.Database;
 
 /// <summary>
-/// UMA数据库条目
+/// UMA database entry
 /// </summary>
 public class UmaDatabaseEntry
 {
-    /// <summary>文件类型 (m列)</summary>
+    /// <summary>File type (m column)</summary>
     public string Type { get; set; } = string.Empty;
     
-    /// <summary>文件名 (n列)</summary>
+    /// <summary>File name (n column)</summary>
     public string Name { get; set; } = string.Empty;
     
-    /// <summary>URL或路径 (h列)</summary>
+    /// <summary>URL or path (h column)</summary>
     public string Url { get; set; } = string.Empty;
     
-    /// <summary>依赖项 (d列)</summary>
+    /// <summary>Dependencies (d column)</summary>
     public string Dependencies { get; set; } = string.Empty;
     
-    /// <summary>校验和 (c列，如果存在)</summary>
+    /// <summary>Checksum (c column, if exists)</summary>
     public string? Checksum { get; set; }
     
-    /// <summary>密钥 (e列，如果存在)</summary>
+    /// <summary>Key (e column, if exists)</summary>
     public string? Key { get; set; }
 
     public override string ToString()

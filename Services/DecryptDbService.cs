@@ -6,7 +6,7 @@ using Microsoft.Data.Sqlite;
 namespace UmaDecryptor.Services;
 
 /// <summary>
-/// 单个数据库文件解密服务
+/// Single database file decryption service
 /// </summary>
 public class DecryptDbService
 {
@@ -18,7 +18,7 @@ public class DecryptDbService
     {
         _logger = logger;
         
-        // 为子组件创建专用的logger
+        // Create dedicated logger for child components
         using var loggerFactory = LoggerFactory.Create(builder =>
         {
             builder.AddConsole().SetMinimumLevel(LogLevel.Information);
@@ -40,7 +40,7 @@ public class DecryptDbService
 
         try
         {
-            // 验证输入文件
+            // Validate input file
             if (!File.Exists(options.InputPath))
             {
                 _logger.LogError("Input file does not exist: {InputPath}", options.InputPath);
@@ -51,7 +51,7 @@ public class DecryptDbService
             _logger.LogInformation("Input file size: {FileSize:N0} bytes ({SizeMB:F2} MB)", 
                 fileInfo.Length, fileInfo.Length / (1024.0 * 1024.0));
 
-            // 获取解密密钥
+            // Get decryption key
             byte[] decryptionKey;
             if (!string.IsNullOrEmpty(options.CustomKey))
             {
@@ -64,18 +64,18 @@ public class DecryptDbService
                 decryptionKey = _keyManager.GetDatabaseDecryptionKey(options.Region);
             }
 
-            // 创建输出目录
+            // Create output directory
             var outputDir = Path.GetDirectoryName(options.OutputPath);
             if (!string.IsNullOrEmpty(outputDir))
             {
                 Directory.CreateDirectory(outputDir);
             }
 
-            // 执行解密
+            // Execute decryption
             _logger.LogInformation("Starting decryption process...");
             await DecryptSingleDatabaseAsync(options.InputPath, options.OutputPath, decryptionKey, options.CipherIndex);
 
-            // 验证结果
+            // Verify results
             if (File.Exists(options.OutputPath))
             {
                 var outputFileInfo = new FileInfo(options.OutputPath);
@@ -83,7 +83,7 @@ public class DecryptDbService
                 _logger.LogInformation("Output file size: {FileSize:N0} bytes ({SizeMB:F2} MB)", 
                     outputFileInfo.Length, outputFileInfo.Length / (1024.0 * 1024.0));
 
-                // 验证解密结果
+                // Verify decryption results
                 var isValid = await _fileProcessor.ValidateDecryptedFileAsync(options.OutputPath);
                 if (isValid)
                 {
@@ -107,7 +107,7 @@ public class DecryptDbService
     }
 
     /// <summary>
-    /// 解密单个数据库文件的核心逻辑
+    /// Core logic for decrypting single database file
     /// </summary>
     private async Task DecryptSingleDatabaseAsync(string inputPath, string outputPath, byte[] key, int cipherIndex)
     {
@@ -117,13 +117,13 @@ public class DecryptDbService
 
             try
             {
-                // 打开加密数据库
+                // Open encrypted database
                 db = Sqlite3MC.Open(inputPath);
 
-                // 设置cipher index
+                // Set cipher index
                 int cfgRc = Sqlite3MC.MC_Config(db, "cipher", cipherIndex);
 
-                // 设置解密密钥
+                // Set decryption key
                 int rcKey = Sqlite3MC.Key_SetBytes(db, key);
                 if (rcKey != Sqlite3MC.SQLITE_OK)
                 {
@@ -131,7 +131,7 @@ public class DecryptDbService
                     throw new InvalidOperationException($"sqlite3_key returned rc={rcKey}, errmsg={em}");
                 }
 
-                // 验证数据库可读性
+                // Verify database readability
                 if (!Sqlite3MC.ValidateReadable(db, out string? validateErr))
                 {
                     throw new InvalidOperationException($"Database validation failed after key setup: {validateErr}");
@@ -143,7 +143,7 @@ public class DecryptDbService
                 var allTablesData = ReadAllTablesFromDatabase(db);
                 _logger.LogInformation("📊 Read data from {TableCount} tables", allTablesData.Count);
 
-                // 创建解密后的数据库（输出路径直接使用，不修改）
+                // Create decrypted database (use output path directly, no modification)
                 CreateDecryptedDatabase(outputPath, allTablesData);
 
                 _logger.LogInformation("✅ Successfully created decrypted database");
@@ -171,7 +171,7 @@ public class DecryptDbService
     }
 
     /// <summary>
-    /// 从数据库中读取所有表的数据
+    /// Read data from all tables in database
     /// </summary>
     private Dictionary<string, List<Dictionary<string, object>>> ReadAllTablesFromDatabase(IntPtr db)
     {
@@ -179,7 +179,7 @@ public class DecryptDbService
 
         try
         {
-            // 首先获取所有表名
+            // First get all table names
             var tableNames = new List<string>();
             const string getTablesQuery = "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'";
             
@@ -202,7 +202,7 @@ public class DecryptDbService
             _logger.LogInformation("🔍 Found {TableCount} tables: {Tables}", 
                 tableNames.Count, string.Join(", ", tableNames));
 
-            // 读取每个表的数据
+            // Read data from each table
             foreach (var tableName in tableNames)
             {
                 var tableData = new List<Dictionary<string, object>>();
@@ -217,7 +217,7 @@ public class DecryptDbService
                         {
                             var entry = new Dictionary<string, object>();
                             
-                            // 获取列数
+                            // Get column count
                             int columnCount = Sqlite3MC.ColumnCount(stmt);
                             
                             for (int i = 0; i < columnCount; i++)
@@ -241,7 +241,7 @@ public class DecryptDbService
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "❌ Failed to read table {TableName}", tableName);
-                    // 继续处理其他表，不要让一个表的错误影响整体
+                    // Continue processing other tables, don't let one table's error affect the whole
                 }
             }
         }
@@ -255,7 +255,7 @@ public class DecryptDbService
     }
 
     /// <summary>
-    /// 创建解密后的SQLite数据库（包含所有表）
+    /// Create decrypted SQLite database (containing all tables)
     /// </summary>
     private void CreateDecryptedDatabase(string outputPath, Dictionary<string, List<Dictionary<string, object>>> allTablesData)
     {
@@ -264,26 +264,26 @@ public class DecryptDbService
             throw new ArgumentException("Output path cannot be null or empty", nameof(outputPath));
         }
 
-        // 确保输出目录存在
+        // Ensure output directory exists
         var outputDir = Path.GetDirectoryName(outputPath);
         if (!string.IsNullOrEmpty(outputDir) && !Directory.Exists(outputDir))
         {
             Directory.CreateDirectory(outputDir);
         }
 
-        // 删除现有文件
+        // Delete existing file
         if (File.Exists(outputPath))
         {
             File.Delete(outputPath);
         }
 
-        // 创建SQLite连接字符串
+        // Create SQLite connection string
         var absolutePath = Path.GetFullPath(outputPath);
         
-        // 使用Microsoft.Data.Sqlite创建输出数据库
+        // Use Microsoft.Data.Sqlite to create output database
         var connectionString = $"Data Source={absolutePath}";
 
-        // 设置工作目录为可执行文件所在目录
+        // Set working directory to executable file location
         var originalWorkingDir = Environment.CurrentDirectory;
         try
         {
@@ -300,7 +300,7 @@ public class DecryptDbService
             {
                 using var transaction = connection.BeginTransaction();
 
-            // 为每个表创建表结构并插入数据
+            // Create table structure and insert data for each table
             foreach (var tableData in allTablesData)
             {
                 string tableName = tableData.Key;
@@ -314,18 +314,18 @@ public class DecryptDbService
 
                 try
                 {
-                    // 从第一行数据推断列结构
+                    // Infer column structure from first row of data
                     var firstRow = rows[0];
                     var columns = firstRow.Keys.ToList();
 
-                    // 创建表结构
+                    // Create table structure
                     var columnDefs = columns.Select(col => $"[{col}] TEXT").ToList();
                     var createTableSql = $"CREATE TABLE [{tableName}] ({string.Join(", ", columnDefs)});";
 
                     using var createCommand = new SqliteCommand(createTableSql, connection, transaction);
                     createCommand.ExecuteNonQuery();
 
-                    // 批量插入数据
+                    // Bulk insert data
                     var paramNames = columns.Select(col => $"@{col}").ToList();
                     var insertSql = $"INSERT INTO [{tableName}] ([{string.Join("], [", columns)}]) VALUES ({string.Join(", ", paramNames)});";
                     
@@ -340,7 +340,7 @@ public class DecryptDbService
                     int insertedCount = 0;
                     foreach (var row in rows)
                     {
-                        // 设置参数值
+                        // Set parameter values
                         foreach (var col in columns)
                         {
                             var value = row.ContainsKey(col) ? row[col] : DBNull.Value;
@@ -363,7 +363,7 @@ public class DecryptDbService
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "❌ Failed to create table '{TableName}'", tableName);
-                    // 继续处理其他表
+                    // Continue processing other tables
                 }
             }
 
@@ -388,7 +388,7 @@ public class DecryptDbService
     }
 
     /// <summary>
-    /// 解析十六进制密钥字符串
+    /// Parse hexadecimal key string
     /// </summary>
     private byte[] ParseHexKey(string hexKey)
     {

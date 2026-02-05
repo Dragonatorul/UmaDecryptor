@@ -9,7 +9,7 @@ class Program
 {
     static async Task<int> Main(string[] args)
     {
-        // 设置控制台编码为UTF-8以支持中文显示
+        // Set console encoding to UTF-8 to support Chinese display
         System.Console.OutputEncoding = System.Text.Encoding.UTF8;
         System.Console.InputEncoding = System.Text.Encoding.UTF8;
         

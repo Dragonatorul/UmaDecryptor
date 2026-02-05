@@ -6,7 +6,7 @@ using UmaDecryptor.Core;
 namespace UmaDecryptor.Database;
 
 /// <summary>
-/// 数据库解密器 - 核心数据库解密功能
+/// Database decryptor - core database decryption functionality
 /// </summary>
 public class DatabaseDecryptor
 {
@@ -18,7 +18,7 @@ public class DatabaseDecryptor
     {
         _logger = logger;
         
-        // 为子组件创建专用的logger
+        // Create dedicated logger for child components
         using var loggerFactory = LoggerFactory.Create(builder =>
         {
             builder.AddConsole().SetMinimumLevel(LogLevel.Information);
@@ -29,22 +29,22 @@ public class DatabaseDecryptor
     }
 
     /// <summary>
-    /// 解密所有数据库文件
+    /// Decrypt all database files
     /// </summary>
     public async Task DecryptDatabasesAsync(string inputPath, string outputPath, Region region = Region.Japan)
     {
         _logger.LogInformation("Starting database decryption process...");
         _logger.LogInformation("Region: {Region}", region);
 
-        // 获取数据库解密密钥
+        // Get database decryption key
         var decryptionKey = _keyManager.GetDatabaseDecryptionKey(region);
         _logger.LogDebug("Database decryption key obtained");
 
-        // 扫描需要解密的数据库文件
+        // Scan database files that need decryption
         var databaseFiles = await ScanDatabaseFilesAsync(inputPath);
         _logger.LogInformation("Found {Count} database files to decrypt", databaseFiles.Count);
 
-        // 处理meta文件解密 (直接输出到根目录)
+        // Process meta file decryption (output directly to root directory)
         var metaFiles = databaseFiles.Where(f => f.DatabaseType == DatabaseType.Meta).ToList();
         if (metaFiles.Any())
         {
@@ -56,10 +56,10 @@ public class DatabaseDecryptor
             await Task.WhenAll(metaDecryptionTasks);
         }
 
-        // 处理master文件夹 - 原封不动拷贝
+        // Process master folder - copy intact
         await CopyMasterDirectoryAsync(inputPath, outputPath);
 
-        // 处理其他数据库文件（如果有的话）
+        // Process other database files (if any)
         var otherFiles = databaseFiles.Where(f => f.DatabaseType != DatabaseType.Meta).ToList();
         if (otherFiles.Any())
         {
@@ -84,7 +84,7 @@ public class DatabaseDecryptor
     }
 
     /// <summary>
-    /// 扫描输入目录中的数据库文件
+    /// Scan database files in input directory
     /// </summary>
     private async Task<List<DatabaseFileInfo>> ScanDatabaseFilesAsync(string inputPath)
     {
@@ -92,7 +92,7 @@ public class DatabaseDecryptor
         {
             var databaseFiles = new List<DatabaseFileInfo>();
             
-            // 检查meta文件（直接在根目录下的加密数据库文件）
+            // Check meta file (encrypted database file directly in root directory)
             var metaFile = Path.Combine(inputPath, "meta");
             if (File.Exists(metaFile))
             {
@@ -107,7 +107,7 @@ public class DatabaseDecryptor
                 });
             }
 
-            // 扫描其他可能的数据库目录
+            // Scan other possible database directories
             var searchDirectories = new[]
             {
                 Path.Combine(inputPath, "master"),
@@ -152,7 +152,7 @@ public class DatabaseDecryptor
     }
 
     /// <summary>
-    /// 解密单个数据库文件
+    /// Decrypt single database file
     /// </summary>
     private async Task DecryptSingleDatabaseAsync(DatabaseFileInfo dbInfo, string outputPath, byte[] key)
     {
@@ -172,7 +172,7 @@ public class DatabaseDecryptor
                 return;
             }
 
-            // 根据数据库类型确定输出文件名和路径
+            // Determine output filename and path based on database type
             string outputFilePath;
             if (dbInfo.DatabaseType == DatabaseType.Meta)
             {
@@ -187,18 +187,18 @@ public class DatabaseDecryptor
                 outputFilePath = Path.Combine(dbOutputPath, Path.GetFileName(dbInfo.FilePath));
             }
             
-            // 对于 meta 文件，使用新的完整读取所有表的逻辑
+            // For meta files, use new logic to read all tables completely
             if (dbInfo.DatabaseType == DatabaseType.Meta)
             {
                 await DecryptMetaWithAllTablesAsync(dbInfo.FilePath, outputFilePath, key);
             }
             else
             {
-                // 执行解密操作（其他文件使用原逻辑）
+                // Execute decryption operation (other files use original logic)
                 await _fileProcessor.DecryptDatabaseFileAsync(dbInfo.FilePath, outputFilePath, key);
             }
             
-            // 验证解密结果
+            // Verify decryption results
             if (await _fileProcessor.ValidateDecryptedFileAsync(outputFilePath))
             {
                 _logger.LogInformation("Successfully decrypted {DatabaseType}: {RelativePath} -> {OutputFile}", 
@@ -219,7 +219,7 @@ public class DatabaseDecryptor
     }
 
     /// <summary>
-    /// 复制未加密的数据库文件
+    /// Copy unencrypted database file
     /// </summary>
     private async Task CopyUnencryptedDatabaseAsync(DatabaseFileInfo dbInfo, string outputPath)
     {
@@ -228,7 +228,7 @@ public class DatabaseDecryptor
     }
 
     /// <summary>
-    /// 拷贝master文件夹到输出目录
+    /// Copy master folder to output directory
     /// </summary>
     private async Task CopyMasterDirectoryAsync(string inputPath, string outputPath)
     {
@@ -249,10 +249,10 @@ public class DatabaseDecryptor
         {
             try
             {
-                // 创建目标目录
+// Create target directory
                 Directory.CreateDirectory(masterOutputPath);
 
-                // 获取源目录的所有文件和子目录
+                // Get all files and subdirectories in source directory
                 var sourceInfo = new DirectoryInfo(masterInputPath);
                 CopyDirectoryRecursively(sourceInfo, masterOutputPath);
 
@@ -273,14 +273,14 @@ public class DatabaseDecryptor
     }
 
     /// <summary>
-    /// 递归复制目录及其内容
+    /// Recursively copy directory and its contents
     /// </summary>
     private void CopyDirectoryRecursively(DirectoryInfo sourceDir, string targetDirPath)
     {
-        // 创建目标目录
+        // Create target directory
         Directory.CreateDirectory(targetDirPath);
 
-        // 复制所有文件
+        // Copy all files
         foreach (var file in sourceDir.GetFiles())
         {
             var targetFilePath = Path.Combine(targetDirPath, file.Name);
@@ -296,7 +296,7 @@ public class DatabaseDecryptor
             }
         }
 
-        // 递归复制所有子目录
+        // Recursively copy all subdirectories
         foreach (var subDir in sourceDir.GetDirectories())
         {
             var targetSubDirPath = Path.Combine(targetDirPath, subDir.Name);
@@ -314,7 +314,7 @@ public class DatabaseDecryptor
     }
 
     /// <summary>
-    /// 检查文件是否为数据库文件
+    /// Check if file is a database file
     /// </summary>
     private bool IsDatabaseFile(string filePath)
     {
@@ -329,11 +329,11 @@ public class DatabaseDecryptor
     }
 
     /// <summary>
-    /// 检查数据库文件是否加密
+    /// Check if database file is encrypted
     /// </summary>
     private bool CheckIfEncrypted(string filePath)
     {
-        // 对于UMA游戏，我们假设大部分文件都需要特殊处理
+        // For UMA games, we assume most files need special processing
         // meta文件肯定是加密的，其他文件可能需要检测
         var fileName = Path.GetFileName(filePath).ToLowerInvariant();
         
@@ -342,13 +342,13 @@ public class DatabaseDecryptor
             return true; // meta文件总是加密的
         }
         
-        // 其他文件的加密检测逻辑可以后续完善
+        // Encryption detection logic for other files can be improved later
         // 目前返回false，表示直接复制
         return false;
     }
 
     /// <summary>
-    /// 解密 meta 数据库并读取所有表（新逻辑）
+    /// Decrypt meta database and read all tables (new logic)
     /// </summary>
     private async Task DecryptMetaWithAllTablesAsync(string inputFilePath, string outputFilePath, byte[] key)
     {
@@ -360,13 +360,13 @@ public class DatabaseDecryptor
 
             try
             {
-                // 打开加密数据库
+                // Open encrypted database
                 db = Sqlite3MC.Open(inputFilePath);
 
-                // 设置cipher配置
+                // Set cipher configuration
                 int cfgRc = Sqlite3MC.MC_Config(db, "cipher", 3);
 
-                // 设置解密密钥
+                // Set decryption key
                 int rcKey = Sqlite3MC.Key_SetBytes(db, key);
                 if (rcKey != Sqlite3MC.SQLITE_OK)
                 {
@@ -374,7 +374,7 @@ public class DatabaseDecryptor
                     throw new InvalidOperationException($"sqlite3_key returned rc={rcKey}, errmsg={em}");
                 }
 
-                // 验证数据库可读性
+                // Verify database readability
                 if (!Sqlite3MC.ValidateReadable(db, out string? validateErr))
                 {
                     throw new InvalidOperationException($"Database validation failed: {validateErr}");
@@ -382,11 +382,11 @@ public class DatabaseDecryptor
 
                 _logger.LogInformation("✅ Successfully opened encrypted meta database");
 
-                // 读取所有表的数据
+                // Read data from all tables
                 var allTablesData = ReadAllTablesFromDatabase(db);
                 _logger.LogInformation("📊 Read data from {TableCount} tables", allTablesData.Count);
 
-                // 创建解密后的数据库
+                // Create decrypted database
                 CreateDecryptedDatabase(outputFilePath, allTablesData);
 
                 _logger.LogInformation("🎉 Successfully created decrypted meta database with all tables");
@@ -402,7 +402,7 @@ public class DatabaseDecryptor
     }
 
     /// <summary>
-    /// 从数据库中读取所有表的数据
+    /// Read data from all tables in database
     /// </summary>
     private Dictionary<string, List<Dictionary<string, object>>> ReadAllTablesFromDatabase(IntPtr db)
     {
@@ -410,7 +410,7 @@ public class DatabaseDecryptor
 
         try
         {
-            // 首先获取所有表名
+            // First get all table names
             var tableNames = new List<string>();
             const string getTablesQuery = "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'";
             
@@ -433,7 +433,7 @@ public class DatabaseDecryptor
             _logger.LogInformation("🔍 Found {TableCount} tables: {Tables}", 
                 tableNames.Count, string.Join(", ", tableNames));
 
-            // 读取每个表的数据
+            // Read data from each table
             foreach (var tableName in tableNames)
             {
                 var tableData = new List<Dictionary<string, object>>();
@@ -448,7 +448,7 @@ public class DatabaseDecryptor
                         {
                             var entry = new Dictionary<string, object>();
                             
-                            // 获取列数
+                            // Get column count
                             int columnCount = Sqlite3MC.ColumnCount(stmt);
                             
                             for (int i = 0; i < columnCount; i++)
@@ -472,7 +472,7 @@ public class DatabaseDecryptor
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "❌ Failed to read table {TableName}", tableName);
-                    // 继续处理其他表，不要让一个表的错误影响整体
+                    // Continue processing other tables, don't let one table's error affect the whole
                 }
             }
         }
@@ -486,7 +486,7 @@ public class DatabaseDecryptor
     }
 
     /// <summary>
-    /// 创建解密后的SQLite数据库（包含所有表）
+    /// Create decrypted SQLite database (containing all tables)
     /// </summary>
     private void CreateDecryptedDatabase(string outputPath, Dictionary<string, List<Dictionary<string, object>>> allTablesData)
     {
@@ -497,23 +497,23 @@ public class DatabaseDecryptor
 
         _logger.LogInformation("Creating decrypted database with {TableCount} tables: {OutputPath}", allTablesData.Count, outputPath);
 
-        // 确保输出目录存在
+        // Ensure output directory exists
         var outputDir = Path.GetDirectoryName(outputPath);
         if (!string.IsNullOrEmpty(outputDir) && !Directory.Exists(outputDir))
         {
             Directory.CreateDirectory(outputDir);
         }
 
-        // 删除现有文件
+        // Delete existing file
         if (File.Exists(outputPath))
         {
             File.Delete(outputPath);
         }
 
-        // 创建SQLite连接字符串
+        // Create SQLite connection string
         var absolutePath = Path.GetFullPath(outputPath);
         
-        // 使用Microsoft.Data.Sqlite创建输出数据库
+        // Use Microsoft.Data.Sqlite to create output database
         var connectionString = $"Data Source={absolutePath}";
 
         try 
@@ -525,7 +525,7 @@ public class DatabaseDecryptor
             {
                 using var transaction = connection.BeginTransaction();
 
-            // 为每个表创建表结构并插入数据
+            // Create table structure and insert data for each table
             foreach (var tableData in allTablesData)
             {
                 string tableName = tableData.Key;
@@ -539,11 +539,11 @@ public class DatabaseDecryptor
 
                 try
                 {
-                    // 从第一行数据推断列结构
+                    // Infer column structure from first row of data
                     var firstRow = rows[0];
                     var columns = firstRow.Keys.ToList();
 
-                    // 创建表结构
+                    // Create table structure
                     var columnDefs = columns.Select(col => $"[{col}] TEXT").ToList();
                     var createTableSql = $"CREATE TABLE [{tableName}] ({string.Join(", ", columnDefs)});";
 
@@ -553,7 +553,7 @@ public class DatabaseDecryptor
                     _logger.LogDebug("Created table '{TableName}' with {ColumnCount} columns: {Columns}", 
                         tableName, columns.Count, string.Join(", ", columns));
 
-                    // 批量插入数据
+                    // Bulk insert data
                     var paramNames = columns.Select(col => $"@{col}").ToList();
                     var insertSql = $"INSERT INTO [{tableName}] ([{string.Join("], [", columns)}]) VALUES ({string.Join(", ", paramNames)});";
                     
@@ -568,7 +568,7 @@ public class DatabaseDecryptor
                     int insertedCount = 0;
                     foreach (var row in rows)
                     {
-                        // 设置参数值
+                        // Set parameter values
                         foreach (var col in columns)
                         {
                             var value = row.ContainsKey(col) ? row[col] : DBNull.Value;
@@ -591,7 +591,7 @@ public class DatabaseDecryptor
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "❌ Failed to create table '{TableName}'", tableName);
-                    // 继续处理其他表
+                    // Continue processing other tables
                 }
             }
 
@@ -613,7 +613,7 @@ public class DatabaseDecryptor
 }
 
 /// <summary>
-/// 数据库文件信息
+/// Database file information
 /// </summary>
 public class DatabaseFileInfo
 {
@@ -625,7 +625,7 @@ public class DatabaseFileInfo
 }
 
 /// <summary>
-/// 数据库类型枚举
+/// Database type enumeration
 /// </summary>
 public enum DatabaseType
 {
