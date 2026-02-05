@@ -22,7 +22,7 @@ public class DatabaseFileProcessor
     {
         _logger.LogInformation("Decrypting database: {InputFile} -> {OutputFile}", inputFilePath, outputFilePath);
 
-        // 检查是否为meta文件
+        // Check if it's a meta file
         var isMetaFile = Path.GetFileName(inputFilePath).Equals("meta", StringComparison.OrdinalIgnoreCase);
         
         if (isMetaFile)
@@ -31,7 +31,7 @@ public class DatabaseFileProcessor
         }
         else
         {
-            // 对于其他类型的数据库文件，可以扩展处理逻辑
+            // For other types of database files, processing logic can be extended
             await DecryptGenericDatabaseAsync(inputFilePath, outputFilePath, key);
         }
     }
@@ -77,7 +77,7 @@ public class DatabaseFileProcessor
                 var entries = ReadMetaEntriesFromDatabase(db);
                 _logger.LogInformation("Read {EntryCount} entries from encrypted database", entries.Count);
 
-                // 创建解密后的数据库
+                // Create decrypted database
                 CreateDecryptedDatabase(outputFilePath, entries);
                 
                 _logger.LogInformation("Successfully created decrypted database: {OutputFile}", outputFilePath);
@@ -204,7 +204,7 @@ public class DatabaseFileProcessor
         
         try
         {
-            // 创建表结构 (完整的6列)
+            // Create table structure (complete 6 columns)
             var createTableSql = @"
                 CREATE TABLE a (
                     m TEXT,  -- type
@@ -269,10 +269,10 @@ public class DatabaseFileProcessor
     {
         _logger.LogInformation("Processing generic database file: {InputFile}", inputFilePath);
         
-        // TODO: 根据需要实现其他类型数据库的解密逻辑
+        // TODO: Implement decryption logic for other types of databases as needed
         await Task.Run(() =>
         {
-            // 暂时直接复制文件
+            // Temporarily copy file directly
             File.Copy(inputFilePath, outputFilePath, overwrite: true);
             _logger.LogInformation("Copied database file: {OutputFile}", outputFilePath);
         });
@@ -293,7 +293,7 @@ public class DatabaseFileProcessor
                     return false;
                 }
 
-                // 检查文件大小
+                // Check file size
                 var fileInfo = new FileInfo(filePath);
                 if (fileInfo.Length == 0)
                 {
@@ -301,7 +301,7 @@ public class DatabaseFileProcessor
                     return false;
                 }
 
-                // 尝试连接SQLite数据库来验证
+                // Try to connect to SQLite database for validation
                 return ValidateSQLiteDatabase(filePath);
             });
         }
@@ -322,7 +322,7 @@ public class DatabaseFileProcessor
             using var connection = new SqliteConnection($"Data Source={dbPath}");
             connection.Open();
             
-            // 尝试获取数据库中的表数量来验证数据库完整性
+            // Try to get table count in database to validate database integrity
             using var command = new SqliteCommand(
                 "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%';", connection);
             var tableCount = command.ExecuteScalar();

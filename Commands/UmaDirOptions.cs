@@ -3,30 +3,30 @@ using UmaDecryptor.Core;
 
 namespace UmaDecryptor.Commands;
 
-[Verb("uma-dir", HelpText = "处理 UMA 游戏目录进行数据解密")]
+[Verb("uma-dir", HelpText = "Process UMA game directory for data decryption")]
 public class UmaDirOptions
 {
-    [Option('i', "input", Required = true, HelpText = "UMA 游戏目录路径 (包含 meta、master、dat 文件夹)")]
+    [Option('i', "input", Required = true, HelpText = "UMA game directory path (containing meta, master, dat folders)")]
     public string InputPath { get; set; } = string.Empty;
 
-    [Option('o', "output", HelpText = "输出目录路径 (使用 --info 时不需要)")]
+    [Option('o', "output", HelpText = "Output directory path (not needed when using --info)")]
     public string? OutputPath { get; set; }
 
-    [Option('k', "key", HelpText = "数据库解密密钥 (十六进制字符串，如: AABBCCDD...)")]
+    [Option('k', "key", HelpText = "Database decryption key (hexadecimal string, e.g.: AABBCCDD...)")]
     public string? DatabaseKey { get; set; }
 
-    [Option('r', "region", Default = Region.Japan, HelpText = "服务器区域 (Japan=0, Global=1, 默认: Japan)")]
+    [Option('r', "region", Default = Region.Japan, HelpText = "Server region (Japan=0, Global=1, default: Japan)")]
     public Region Region { get; set; } = Region.Japan;
 
-    [Option('t', "threads", HelpText = "dat 文件并行处理线程数 (默认: CPU 核心数)")]
+    [Option('t', "threads", HelpText = "Number of parallel processing threads for dat files (default: CPU core count)")]
     public int? MaxThreads { get; set; }
 
-    [Option("info", HelpText = "仅显示目录信息")]
+    [Option("info", HelpText = "Display directory information only")]
     public bool InfoOnly { get; set; } = false;
 
-    [Option("overwrite", HelpText = "覆盖已存在的文件 (全量更新模式)")]
+    [Option("overwrite", HelpText = "Overwrite existing files (full update mode)")]
     public bool Overwrite { get; set; } = false;
 
-    [Option('v', "verbose", HelpText = "启用详细日志")]
+    [Option('v', "verbose", HelpText = "Enable verbose logging")]
     public bool Verbose { get; set; } = false;
 }

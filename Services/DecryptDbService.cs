@@ -29,7 +29,7 @@ public class DecryptDbService
     }
 
     /// <summary>
-    /// 解密单个数据库文件
+    /// Decrypt single database file
     /// </summary>
     public async Task ProcessAsync(DecryptDbOptions options)
     {
@@ -139,7 +139,7 @@ public class DecryptDbService
 
                 _logger.LogInformation("✅ Successfully opened and validated encrypted database");
 
-                // 读取数据库内容 (所有表)
+                // Read database content (all tables)
                 var allTablesData = ReadAllTablesFromDatabase(db);
                 _logger.LogInformation("📊 Read data from {TableCount} tables", allTablesData.Count);
 
@@ -331,7 +331,7 @@ public class DecryptDbService
                     
                     using var insertCommand = new SqliteCommand(insertSql, connection, transaction);
 
-                    // 添加参数
+                    // Add parameters
                     foreach (var col in columns)
                     {
                         insertCommand.Parameters.Add($"@{col}", SqliteType.Text);
@@ -394,7 +394,7 @@ public class DecryptDbService
     {
         try
         {
-            // 移除可能的前缀和空格
+            // Remove possible prefix and spaces
             hexKey = hexKey.Replace("0x", "").Replace(" ", "").Replace("-", "");
 
             if (hexKey.Length % 2 != 0)

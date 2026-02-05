@@ -13,7 +13,7 @@ class Program
         System.Console.OutputEncoding = System.Text.Encoding.UTF8;
         System.Console.InputEncoding = System.Text.Encoding.UTF8;
         
-        // 配置日志
+        // Configure logging
         using var loggerFactory = LoggerFactory.Create(builder =>
         {
             builder.AddConsole().SetMinimumLevel(LogLevel.Information);
@@ -26,7 +26,7 @@ class Program
             return await parseResult.MapResult(
                 async (UmaDirOptions options) =>
                 {
-                    // 如果启用了详细模式，调整日志级别
+                    // If verbose mode is enabled, adjust log level
                     if (options.Verbose)
                     {
                         using var verboseLoggerFactory = LoggerFactory.Create(builder =>
@@ -77,10 +77,10 @@ class Program
                 },
                 async (DecryptDatOptions options) =>
                 {
-                    // 如果启用了详细模式，调整日志级别
+                    // If verbose mode is enabled, adjust log level
                     if (options.Verbose)
                     {
-                        // 重新创建带调试级别的logger factory
+                        // Recreate logger factory with debug level
                         using var verboseLoggerFactory = LoggerFactory.Create(builder =>
                         {
                             builder.AddConsole().SetMinimumLevel(LogLevel.Debug);

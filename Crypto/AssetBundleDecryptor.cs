@@ -4,11 +4,11 @@ using System.IO;
 namespace UmaDecryptor.Crypto;
 
 /// <summary>
-/// UMA游戏资源包解密器
+/// UMA game asset bundle decryptor
 /// </summary>
 public static class AssetBundleDecryptor
 {
-    // 默认值（你之前提供的）
+    // Default values (provided previously)
     private static readonly byte[] DefaultBaseKeys = new byte[]
     {
         0x53, 0x2B, 0x46, 0x31, 0xE4, 0xA7, 0xB9, 0x47, 0x3E, 0x7C, 0xFB
@@ -16,24 +16,24 @@ public static class AssetBundleDecryptor
     private const long DefaultKey = -7673907454518172050L;
 
     /// <summary>
-    /// 使用默认 baseKeys + key 解密文件并返回解密后的 byte[]（一次性读取全部到内存）。
-    /// 前 256 字节保持原样（不做 XOR），从偏移 256 开始对每个字节做 data[i] ^= keys[i % keys.Length]。
+    /// Use default baseKeys + key to decrypt file and return decrypted byte[] (read all at once into memory).
+    /// First 256 bytes remain unchanged (no XOR), from offset 256 start doing data[i] ^= keys[i % keys.Length] for each byte.
     /// </summary>
-    /// <param name="inputFilePath">要解密的输入文件路径</param>
-    /// <param name="key">解密密钥</param>
-    /// <returns>解密后的字节数组（可直接传给 AssetBundle.LoadFromMemory）</returns>
+    /// <param name="inputFilePath">Input file path to decrypt</param>
+    /// <param name="key">Decryption key</param>
+    /// <returns>Decrypted byte array (can be directly passed to AssetBundle.LoadFromMemory)</returns>
     public static byte[] DecryptFileToBytes(string inputFilePath, long key)
     {
         return DecryptFileToBytes(inputFilePath, DefaultBaseKeys, key);
     }
 
     /// <summary>
-    /// 通用接口：使用指定的 baseKeys 与 key 解密文件并返回解密后的 byte[]。
+    /// General interface: use specified baseKeys and key to decrypt file and return decrypted byte[].
     /// </summary>
-    /// <param name="inputFilePath">输入文件路径（必须存在）</param>
-    /// <param name="baseKeys">baseKeys 数组（每个元素是一个 byte，函数会为每个 baseKeys 元素生成 8 字节的一段）</param>
-    /// <param name="key">int64 key（支持负数）；转成 8 字节小端 two's-complement 后与 baseKeys 异或以构造 keys 平坦数组）</param>
-    /// <returns>解密后的字节数组</returns>
+    /// <param name="inputFilePath">Input file path (must exist)</param>
+    /// <param name="baseKeys">baseKeys array (each element is a byte, function generates 8 bytes for each baseKeys element)</param>
+    /// <param name="key">int64 key (supports negative numbers); converted to 8 bytes little-endian two's-complement then XOR with baseKeys to construct flat keys array)</param>
+    /// <returns>Decrypted byte array</returns>
     public static byte[] DecryptFileToBytes(string inputFilePath, byte[] baseKeys, long key)
     {
         if (string.IsNullOrEmpty(inputFilePath))
@@ -43,15 +43,15 @@ public static class AssetBundleDecryptor
         if (baseKeys == null || baseKeys.Length == 0)
             throw new ArgumentException("baseKeys must not be null or empty", nameof(baseKeys));
 
-        // 读取整个文件到内存（用户要求不分块）
+        // Read entire file into memory (user requested no chunking)
         byte[] data = File.ReadAllBytes(inputFilePath);
 
-        // 构造 keyBytes（8 字节小端）。确保是小端序。
+        // Construct keyBytes (8 bytes little-endian). Ensure little-endian.
         byte[] keyBytes = BitConverter.GetBytes(key);
         if (!BitConverter.IsLittleEndian)
             Array.Reverse(keyBytes);
 
-        // 构造平坦 keys: 对 baseKeys 中的每个字节生成 8 个字节: base ^ keyBytes[j]
+        // Construct flat keys: for each byte in baseKeys generate 8 bytes: base ^ keyBytes[j]
         int baseLen = baseKeys.Length;
         int keysLen = baseLen * 8;
         byte[] keys = new byte[keysLen];
@@ -65,11 +65,11 @@ public static class AssetBundleDecryptor
             }
         }
 
-        // 如果文件长度 <= 256，则没有任何字节被 XOR，直接返回原数据
+        // If file length <= 256, no bytes are XORed, return original data directly
         if (data.Length <= 256)
             return data;
 
-        // 从偏移 256 开始，对每个字节按 keys 循环做异或
+        // From offset 256, perform cyclic XOR on each byte with keys
         for (int i = 256; i < data.Length; ++i)
         {
             data[i] ^= keys[i % keysLen];
@@ -79,28 +79,28 @@ public static class AssetBundleDecryptor
     }
 
     /// <summary>
-    /// 解密文件并保存到指定路径
+    /// Decrypt file and save to specified path
     /// </summary>
-    /// <param name="inputFilePath">输入文件路径</param>
-    /// <param name="outputFilePath">输出文件路径</param>
-    /// <param name="key">解密密钥</param>
+    /// <param name="inputFilePath">Input file path</param>
+    /// <param name="outputFilePath">Output file path</param>
+    /// <param name="key">Decryption key</param>
     public static void DecryptFileToFile(string inputFilePath, string outputFilePath, long key)
     {
         DecryptFileToFile(inputFilePath, outputFilePath, DefaultBaseKeys, key);
     }
 
     /// <summary>
-    /// 解密文件并保存到指定路径（通用接口）
+    /// Decrypt file and save to specified path (general interface)
     /// </summary>
-    /// <param name="inputFilePath">输入文件路径</param>
-    /// <param name="outputFilePath">输出文件路径</param>
-    /// <param name="baseKeys">基础密钥数组</param>
-    /// <param name="key">解密密钥</param>
+    /// <param name="inputFilePath">Input file path</param>
+    /// <param name="outputFilePath">Output file path</param>
+    /// <param name="baseKeys">Base key array</param>
+    /// <param name="key">Decryption key</param>
     public static void DecryptFileToFile(string inputFilePath, string outputFilePath, byte[] baseKeys, long key)
     {
         byte[] decryptedData = DecryptFileToBytes(inputFilePath, baseKeys, key);
         
-        // 确保输出目录存在
+        // Ensure output directory exists
         string? outputDir = Path.GetDirectoryName(outputFilePath);
         if (!string.IsNullOrEmpty(outputDir) && !Directory.Exists(outputDir))
         {

@@ -95,7 +95,7 @@ public class UmaDirectoryValidator
             if (files.Length == 0)
             {
                 _logger.LogWarning("Folder is empty: {FolderName}", folderName);
-                // 空文件夹不算错误，只是警告
+                // Empty folder is not an error, just a warning
             }
 
             _logger.LogDebug("Folder validation passed: {FolderName} ({FileCount} files)", 

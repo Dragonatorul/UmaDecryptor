@@ -1,17 +1,17 @@
 namespace UmaDecryptor.Core;
 
 /// <summary>
-/// 游戏服务器区域
+/// Game server region
 /// </summary>
 public enum Region
 {
     /// <summary>
-    /// 日本服务器（默认）
+    /// Japan server (default)
     /// </summary>
     Japan = 0,
 
     /// <summary>
-    /// 国际服务器 (Global)
+    /// International server (Global)
     /// </summary>
     Global = 1
 }

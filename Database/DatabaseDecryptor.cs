@@ -102,7 +102,7 @@ public class DatabaseDecryptor
                     FilePath = metaFile,
                     RelativePath = "meta",
                     FileSize = new FileInfo(metaFile).Length,
-                    IsEncrypted = true, // meta文件总是加密的
+                    IsEncrypted = true, // Meta files are always encrypted
                     DatabaseType = DatabaseType.Meta
                 });
             }
@@ -117,7 +117,7 @@ public class DatabaseDecryptor
             foreach (var dir in searchDirectories.Where(Directory.Exists))
             {
                 var dirName = Path.GetFileName(dir);
-                // 查找数据库文件
+                // Find database files
                 var patterns = new[] { "*.db", "*.sqlite", "*.dat" };
                 
                 foreach (var pattern in patterns)
@@ -176,12 +176,12 @@ public class DatabaseDecryptor
             string outputFilePath;
             if (dbInfo.DatabaseType == DatabaseType.Meta)
             {
-                // meta文件直接输出到根目录，不加后缀
+                // Meta files output directly to root directory, no suffix added
                 outputFilePath = Path.Combine(outputPath, "meta");
             }
             else
             {
-                // 其他文件保持原有逻辑，放在databases文件夹
+                // Other files keep original logic, placed in databases folder
                 var dbOutputPath = Path.Combine(outputPath, "databases");
                 Directory.CreateDirectory(dbOutputPath);
                 outputFilePath = Path.Combine(dbOutputPath, Path.GetFileName(dbInfo.FilePath));
@@ -256,7 +256,7 @@ public class DatabaseDecryptor
                 var sourceInfo = new DirectoryInfo(masterInputPath);
                 CopyDirectoryRecursively(sourceInfo, masterOutputPath);
 
-                // 统计拷贝结果
+                // Count copy results
                 var copiedFiles = Directory.GetFiles(masterOutputPath, "*", SearchOption.AllDirectories);
                 var totalSize = copiedFiles.Sum(file => new FileInfo(file).Length);
 
@@ -292,7 +292,7 @@ public class DatabaseDecryptor
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "Failed to copy file: {FileName}", file.Name);
-                // 继续处理其他文件，不中断整个过程
+                // Continue processing other files, don't interrupt entire process
             }
         }
 
@@ -308,7 +308,7 @@ public class DatabaseDecryptor
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "Failed to copy subdirectory: {SubDirName}", subDir.Name);
-                // 继续处理其他目录，不中断整个过程
+                // Continue processing other directories, don't interrupt entire process
             }
         }
     }
@@ -318,12 +318,12 @@ public class DatabaseDecryptor
     /// </summary>
     private bool IsDatabaseFile(string filePath)
     {
-        // 简单的数据库文件识别逻辑
-        // 可以通过文件扩展名或文件头判断
+        // Simple database file identification logic
+        // Can be identified by file extension or file header
         var extension = Path.GetExtension(filePath).ToLowerInvariant();
         var fileName = Path.GetFileName(filePath).ToLowerInvariant();
         
-        // 常见的数据库文件扩展名或特殊文件名
+        // Common database file extensions or special filenames
         return extension == ".db" || extension == ".sqlite" || extension == ".dat" ||
                fileName.Contains("master") || fileName.Contains("meta");
     }
@@ -334,16 +334,16 @@ public class DatabaseDecryptor
     private bool CheckIfEncrypted(string filePath)
     {
         // For UMA games, we assume most files need special processing
-        // meta文件肯定是加密的，其他文件可能需要检测
+        // Meta files are definitely encrypted, other files may need detection
         var fileName = Path.GetFileName(filePath).ToLowerInvariant();
         
         if (fileName == "meta")
         {
-            return true; // meta文件总是加密的
+            return true; // Meta files are always encrypted
         }
         
         // Encryption detection logic for other files can be improved later
-        // 目前返回false，表示直接复制
+        // Currently return false, indicating direct copy
         return false;
     }
 
@@ -559,7 +559,7 @@ public class DatabaseDecryptor
                     
                     using var insertCommand = new SqliteCommand(insertSql, connection, transaction);
 
-                    // 添加参数
+                    // Add parameters
                     foreach (var col in columns)
                     {
                         insertCommand.Parameters.Add($"@{col}", SqliteType.Text);
@@ -630,7 +630,7 @@ public class DatabaseFileInfo
 public enum DatabaseType
 {
     Unknown,
-    Meta,      // 主meta数据库文件
-    Master,    // master目录下的数据库文件
-    Data       // dat目录下的数据文件
+    Meta,      // Main meta database file
+    Master,    // Database files in master directory
+    Data       // Data files in dat directory
 }

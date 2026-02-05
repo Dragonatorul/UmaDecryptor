@@ -45,7 +45,7 @@ public class DecryptDatService
                 _logger.LogInformation("🔄 Overwrite mode: processing all files");
             }
 
-            // 验证输入路径
+            // Verify input path
             if (!Directory.Exists(options.InputPath))
             {
                 _logger.LogError("❌ Input directory does not exist: {InputPath}", options.InputPath);
@@ -58,7 +58,7 @@ public class DecryptDatService
                 return -1;
             }
 
-            // 创建输出目录
+            // Create output directory
             if (!Directory.Exists(options.OutputPath))
             {
                 Directory.CreateDirectory(options.OutputPath);
@@ -109,17 +109,17 @@ public class DecryptDatService
     {
         var fileKeyMap = new Dictionary<string, long>(StringComparer.OrdinalIgnoreCase);
 
-        // 检查文件是否是加密的数据库（原始文件）还是解密后的数据库
+        // Check if file is encrypted database (original file) or decrypted database
         bool isEncrypted = IsEncryptedDatabase(metaPath);
         
         if (isEncrypted)
         {
-            // 处理加密的数据库文件
+            // Process encrypted database file
             ReadEncryptedDatabase(metaPath, databaseKey, region, fileKeyMap);
         }
         else
         {
-            // 处理解密后的标准 SQLite 数据库文件
+            // Process decrypted standard SQLite database file
             ReadDecryptedDatabase(metaPath, fileKeyMap);
         }
 
@@ -133,12 +133,12 @@ public class DecryptDatService
     {
         try
         {
-            // 尝试用标准 SQLite 打开文件
+            // Try to open file with standard SQLite
             var connectionString = $"Data Source={filePath}";
             using var connection = new Microsoft.Data.Sqlite.SqliteConnection(connectionString);
             connection.Open();
             
-            // 尝试查询 sqlite_master 表
+            // Try to query sqlite_master table
             using var command = new Microsoft.Data.Sqlite.SqliteCommand("SELECT name FROM sqlite_master LIMIT 1", connection);
             var result = command.ExecuteScalar();
             
@@ -213,12 +213,12 @@ public class DecryptDatService
         {
             try
             {
-                string? url = reader["h"]?.ToString();     // h 列
-                string? keyStr = reader["e"]?.ToString();   // e 列
+                string? url = reader["h"]?.ToString();     // h column
+                string? keyStr = reader["e"]?.ToString();   // e column
 
                 if (!string.IsNullOrEmpty(url) && !string.IsNullOrEmpty(keyStr))
                 {
-                    // 尝试解析密钥为 long
+                    // Try to parse key as long
                     if (long.TryParse(keyStr, out long key))
                     {
                         fileKeyMap[url] = key;
@@ -248,12 +248,12 @@ public class DecryptDatService
         {
             try
             {
-                string? url = Sqlite3MC.ColumnText(stmt, 0);     // h 列
-                string? keyStr = Sqlite3MC.ColumnText(stmt, 1);   // e 列
+                string? url = Sqlite3MC.ColumnText(stmt, 0);     // h column
+                string? keyStr = Sqlite3MC.ColumnText(stmt, 1);   // e column
 
                 if (!string.IsNullOrEmpty(url) && !string.IsNullOrEmpty(keyStr))
                 {
-                    // 尝试解析密钥为 long
+                    // Try to parse key as long
                     if (long.TryParse(keyStr, out long key))
                     {
                         fileKeyMap[url] = key;
@@ -300,7 +300,7 @@ public class DecryptDatService
         int maxThreads = options.MaxThreads ?? Environment.ProcessorCount;
         var parallelOptions = new ParallelOptions
         {
-            MaxDegreeOfParallelism = Math.Max(1, Math.Min(maxThreads, Environment.ProcessorCount * 2)), // 限制线程数范围
+            MaxDegreeOfParallelism = Math.Max(1, Math.Min(maxThreads, Environment.ProcessorCount * 2)), // Limit thread count range
             CancellationToken = CancellationToken.None
         };
 
@@ -311,7 +311,7 @@ public class DecryptDatService
         {
             while (true)
             {
-                await Task.Delay(2000); // 每2秒报告一次进度
+                await Task.Delay(2000); // Report progress every 2 seconds
                 
                 int currentProcessed, currentSuccess, currentError, currentSkipped;
                 lock (lockObj)
@@ -349,13 +349,13 @@ public class DecryptDatService
                 
                 try
                 {
-                    // 获取文件名（用于与数据库记录匹配）
+                    // Get filename (for matching with database records)
                     string fileName = Path.GetFileName(filePath);
                     
-                    // 获取相对路径（用于保持目录结构）
+                    // Get relative path (to maintain directory structure)
                     string relativePath = Path.GetRelativePath(inputDir, filePath);
                     
-                    // 构造输出路径（保持相同的目录结构）
+                    // Construct output path (maintain same directory structure)
                     string outputFilePath = Path.Combine(outputDir, relativePath);
                     
                     // Check if need to skip existing files
@@ -364,7 +364,7 @@ public class DecryptDatService
                         localSkipped = 1;
                         localProcessed = 1;
                         
-                        // 在详细模式下显示跳过的文件
+                        // Display skipped files in verbose mode
                         if (options.Verbose)
                         {
                             _logger.LogDebug("⏭️ Skipping existing file: {RelativePath}", relativePath);
@@ -412,7 +412,7 @@ public class DecryptDatService
                     _logger.LogError(ex, "❌ Failed to decrypt file: {RelativePath}", relativePath);
                 }
                 
-                // 线程安全地更新计数器
+                // Update counters thread-safely
                 lock (lockObj)
                 {
                     processedCount += localProcessed;
@@ -464,7 +464,7 @@ public class DecryptDatService
     {
         try
         {
-            // 移除可能的前缀和空格
+            // Remove possible prefix and spaces
             hexKey = hexKey.Replace("0x", "").Replace(" ", "").Replace("-", "");
 
             if (hexKey.Length % 2 != 0)
